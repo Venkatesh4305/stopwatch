@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Clock & Stopwatch</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Digital Clock & Stopwatch</h1>
+        
+        <div class="clock-section">
+            <h2>Current Time</h2>
+            <div class="clock" id="clock">00:00:00</div>
+        </div>
+
+        <div class="stopwatch-section">
+            <h2>Stopwatch</h2>
+            <div class="stopwatch" id="stopwatch">00:00:00.00</div>
+            
+            <div class="controls">
+                <button onclick="startStopwatch()" id="startBtn">Start</button>
+                <button onclick="pauseStopwatch()" id="pauseBtn" disabled>Pause</button>
+                <button onclick="resetStopwatch()" id="resetBtn">Reset</button>
+                <button onclick="lapTime()" id="lapBtn" disabled>Lap</button>
+            </div>
+            
+            <div class="laps" id="laps"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables for clock
+        let clockInterval;
+
+        // Variables for stopwatch
+        let stopwatchInterval;
+        let stopwatchRunning = false;
+        let elapsedTime = 0;
+        let startTime = 0;
+        let laps = [];
+
+        // Function to update clock
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('clock').textContent = 
+                `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Function to format time
+        function formatTime(ms) {
+            const hours = Math.floor(ms / 3600000);
+            const minutes = Math.floor((ms % 3600000) / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const milliseconds = Math.floor((ms % 1000) / 10);
+            
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+        }
+
+        // Function to start stopwatch
+        function startStopwatch() {
+            // Condition to check if already running
+            if (stopwatchRunning) return;
+            
+            stopwatchRunning = true;
+            startTime = Date.now() - elapsedTime;
+            
+            stopwatchInterval = setInterval(() => {
+                elapsedTime = Date.now() - startTime;
+                document.getElementById('stopwatch').textContent = 
+                    formatTime(elapsedTime);
+            }, 10);
+            
+            // Update button states
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('lapBtn').disabled = false;
+        }
+
+        // Function to pause stopwatch
+        function pauseStopwatch() {
+            if (!stopwatchRunning) return;
+            
+            stopwatchRunning = false;
+            clearInterval(stopwatchInterval);
+            
+            // Update button states
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        // Function to reset stopwatch
+        function resetStopwatch() {
+            // Conditions for stopping and resetting
+            if (stopwatchRunning) {
+                clearInterval(stopwatchInterval);
+                stopwatchRunning = false;
+            }
+            
+            elapsedTime = 0;
+            laps = [];
+            
+            document.getElementById('stopwatch').textContent = '00:00:00.00';
+            document.getElementById('laps').innerHTML = '';
+            
+            // Update button states
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('lapBtn').disabled = true;
+        }
+
+        // Function to record lap time
+        function lapTime() {
+            if (!stopwatchRunning) return;
+            
+            const lapTime = elapsedTime;
+            const lapItem = {
+                number: laps.length + 1,
+                time: lapTime
+            };
+            
+            laps.push(lapItem);
+            
+            // Update laps display
+            const lapsContainer = document.getElementById('laps');
+            const lapElement = document.createElement('div');
+            lapElement.className = 'lap-item';
+            lapElement.innerHTML = `
+                <span>Lap ${lapItem.number}</span>
+                <span>${formatTime(lapItem.time)}</span>
+            `;
+            lapsContainer.prepend(lapElement);
+        }
+
+        // Start clock on load
+        updateClock();
+        clockInterval = setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
